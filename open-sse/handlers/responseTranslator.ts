@@ -1,4 +1,5 @@
 import { FORMATS } from "../translator/formats.ts";
+import { CLAUDE_OAUTH_TOOL_PREFIX } from "../translator/request/openai-to-claude.ts";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -72,7 +73,8 @@ function findBestMessageText(output: unknown[]): {
 export function translateNonStreamingResponse(
   responseBody: unknown,
   targetFormat: string,
-  sourceFormat: string
+  sourceFormat: string,
+  toolNameMap?: Map<string, string> | null
 ): unknown {
   // If already in source format (usually OpenAI), return as-is
   if (targetFormat === sourceFormat || targetFormat === FORMATS.OPENAI) {
@@ -334,11 +336,17 @@ export function translateNonStreamingResponse(
       } else if (blockObj.type === "thinking") {
         thinkingContent += toString(blockObj.thinking);
       } else if (blockObj.type === "tool_use") {
+        const rawName = toString(blockObj.name);
+        const name =
+          toolNameMap?.get(rawName) ??
+          (rawName.startsWith(CLAUDE_OAUTH_TOOL_PREFIX)
+            ? rawName.slice(CLAUDE_OAUTH_TOOL_PREFIX.length)
+            : rawName);
         toolCalls.push({
           id: toString(blockObj.id, `call_${Date.now()}_${toolCalls.length}`),
           type: "function",
           function: {
-            name: toString(blockObj.name),
+            name,
             arguments: JSON.stringify(blockObj.input || {}),
           },
         });
