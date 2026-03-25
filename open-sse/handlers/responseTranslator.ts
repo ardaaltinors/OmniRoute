@@ -124,11 +124,17 @@ export function translateNonStreamingResponse(
           typeof itemObj.arguments === "string"
             ? itemObj.arguments
             : JSON.stringify(itemObj.arguments || {});
+        const rawName = toString(itemObj.name);
+        const name =
+          toolNameMap?.get(rawName) ??
+          (rawName.startsWith(CLAUDE_OAUTH_TOOL_PREFIX)
+            ? rawName.slice(CLAUDE_OAUTH_TOOL_PREFIX.length)
+            : rawName);
         toolCalls.push({
           id: callId,
           type: "function",
           function: {
-            name: toString(itemObj.name),
+            name,
             arguments: fnArgs,
           },
         });

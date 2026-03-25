@@ -57,7 +57,7 @@ export function claudeToOpenAIResponse(chunk, state) {
       } else if (block?.type === "tool_use") {
         const toolCallIndex = state.toolCallIndex++;
         // Restore original tool name from mapping (Claude OAuth)
-        const toolName = state.toolNameMap?.get(block.name) || block.name;
+        const toolName = state.toolNameMap?.get(block.name) ?? block.name;
         const toolCall = {
           index: toolCallIndex,
           id: block.id,
